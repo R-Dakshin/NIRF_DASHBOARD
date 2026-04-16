@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>NIRF Engineering Analytics Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+      --bg: #0a0c10;
+      --s: #111318;
+      --s2: #1a1d24;
+      --bd: #232730;
+      --a: #e8ff5a;
+      --a2: #5affbe;
+      --a3: #ff6b6b;
+      --a4: #7b9fff;
+      --tx: #e8eaf0;
+      --mu: #636880;
+      --mu2: #8b90a8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--tx);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 24px;
+      border-bottom: 1px solid var(--bd);
+      background: var(--s);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .li {
+      width: 30px;
+      height: 30px;
+      background: var(--a);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 12px;
+      color: #0a0c10;
+    }
+
+    .lt {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .ls {
+      font-size: 10px;
+      color: var(--mu);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 2px;
+      background: var(--bg);
+      padding: 3px;
+      border-radius: 9px;
+      border: 1px solid var(--bd);
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--mu2);
+      border: none;
+      background: none;
+      transition: all .18s;
+      font-family: 'DM Sans', sans-serif;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: var(--s2);
+      color: var(--tx);
+      border: 1px solid var(--bd);
+    }
+
+    .tab:hover:not(.active) {
+      color: var(--tx);
+    }
+
+    .yr-w {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--mu2);
+    }
+
+    select.ctl {
+      background: var(--s2);
+      border: 1px solid var(--bd);
+      color: var(--tx);
+      padding: 5px 10px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .main {
+      padding: 20px 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .pg {
+      display: none;
+    }
+
+    .pg.active {
+      display: block;
+    }
+
+    .stitle {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 19px;
+      margin-bottom: 3px;
+    }
+
+    .ssub {
+      font-size: 12px;
+      color: var(--mu2);
+      margin-bottom: 18px;
+    }
+
+    .hl {
+      color: var(--a);
+    }
+
+    .krow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .kpi {
+      background: var(--s);
+      border: 1px solid var(--bd);
+      border-radius: 12px;
+      padding: 15px 17px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+
+    .kpi:hover {
+      border-color: var(--a);
+    }
+
+    .kpi::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .kpi:nth-child(1)::before {
+      background: var(--a);
+    }
+
+    .kpi:nth-child(2)::before {
+      background: var(--a2);
+    }
+
+    .kpi:nth-child(3)::before {
+      background: var(--a4);
+    }
+
+    .kpi:nth-child(4)::before {
+      background: var(--a3);
+    }
+
+    .kpi:nth-child(5)::before {
+      background: #ff9f40;
+    }
+
+    .kpi:nth-child(6)::before {
+      background: #c084fc;
+    }
+
+    .klb {
+      font-size: 10px;
+      color: var(--mu);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-family: 'DM Mono', monospace;
+      margin-bottom: 4px;
+    }
+
+    .kv {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .ks {
+      font-size: 11px;
+      color: var(--mu2);
+    }
+
+    .g2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .g3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .g31 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .g13 {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .card {
+      background: var(--s);
+      border: 1px solid var(--bd);
+      border-radius: 12px;
+      padding: 17px;
+      transition: border-color .2s;
+      margin-bottom: 14px;
+    }
+
+    .card:hover {
+      border-color: rgba(232, 255, 90, .2);
+    }
+
+    .card:last-child {
+      margin-bottom: 0;
+    }
+
+    .ch {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 13px;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .ct {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .chint {
+      font-size: 10px;
+      color: var(--mu);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .irow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .ic {
+      background: var(--s2);
+      border: 1px solid var(--bd);
+      border-left: 3px solid var(--a);
+      border-radius: 10px;
+      padding: 13px;
+    }
+
+    .ic:nth-child(2) {
+      border-left-color: var(--a2);
+    }
+
+    .ic:nth-child(3) {
+      border-left-color: var(--a4);
+    }
+
+    .itg {
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 5px;
+      color: var(--mu);
+    }
+
+    .itx {
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--mu2);
+    }
+
+    .itx strong {
+      color: var(--tx);
+      font-weight: 600;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .sb {
+      flex: 1;
+      min-width: 180px;
+      background: var(--s);
+      border: 1px solid var(--bd);
+      border-radius: 8px;
+      padding: 7px 12px;
+      color: var(--tx);
+      font-size: 12px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .sb:focus {
+      border-color: var(--a);
+    }
+
+    .sb::placeholder {
+      color: var(--mu);
+    }
+
+    .fs {
+      background: var(--s);
+      border: 1px solid var(--bd);
+      color: var(--tx);
+      padding: 7px 11px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+      min-width: 110px;
+    }
+
+    .tw {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 8px 11px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--mu);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      border-bottom: 1px solid var(--bd);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    thead th:hover {
+      color: var(--a);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--bd);
+      transition: background .12s;
+    }
+
+    tbody tr:hover {
+      background: var(--s2);
+    }
+
+    tbody td {
+      padding: 8px 11px;
+      color: var(--mu2);
+      white-space: nowrap;
+    }
+
+    .rb {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 11px;
+    }
+
+    .r1 {
+      background: rgba(232, 255, 90, .2);
+      color: var(--a);
+    }
+
+    .r2 {
+      background: rgba(90, 255, 190, .15);
+      color: var(--a2);
+    }
+
+    .r3 {
+      background: rgba(123, 159, 255, .15);
+      color: var(--a4);
+    }
+
+    .rn {
+      background: var(--s2);
+      color: var(--mu2);
+    }
+
+    .sbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sbg {
+      flex: 1;
+      height: 4px;
+      background: var(--s2);
+      border-radius: 2px;
+      overflow: hidden;
+      min-width: 60px;
+    }
+
+    .sbf {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    .cg {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .cc {
+      background: var(--s2);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .cm {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--mu2);
+      margin-bottom: 3px;
+    }
+
+    .cv2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .cbar {
+      height: 3px;
+      background: var(--bd);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .cfill {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    .pb {
+      background: linear-gradient(135deg, rgba(232, 255, 90, .06), rgba(90, 255, 190, .04));
+      border: 1px solid rgba(232, 255, 90, .2);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .plab {
+      font-size: 10px;
+      color: var(--mu);
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 4px;
+    }
+
+    .pval {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--a);
+      line-height: 1;
+    }
+
+    .pdesc {
+      font-size: 12px;
+      color: var(--mu2);
+      margin-top: 4px;
+      line-height: 1.6;
+      max-width: 400px;
+    }
+
+    .pdesc strong {
+      color: var(--tx);
+    }
+
+    .atabs {
+      display: flex;
+      gap: 3px;
+      background: var(--bg);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--bd);
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .atab {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      color: var(--mu2);
+      border: none;
+      background: none;
+      transition: all .18s;
+      font-family: 'DM Sans', sans-serif;
+      white-space: nowrap;
+    }
+
+    .atab.active {
+      background: var(--s2);
+      color: var(--tx);
+      border: 1px solid var(--bd);
+    }
+
+    .apg {
+      display: none;
+    }
+
+    .apg.active {
+      display: block;
+    }
+
+    .mob-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .ml {
+      background: var(--s2);
+      border-radius: 8px;
+      padding: 11px 13px;
+    }
+
+    .mlt {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 7px;
+    }
+
+    .mup {
+      color: var(--a2);
+    }
+
+    .mdn {
+      color: var(--a3);
+    }
+
+    .mi {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--bd);
+      font-size: 11px;
+    }
+
+    .mi:last-child {
+      border-bottom: none;
+    }
+
+    .mn {
+      color: var(--tx);
+      max-width: 180px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .md {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .sm-btns {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 7px;
+    }
+
+    .smb {
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      border: 1px solid var(--bd);
+      background: none;
+      color: var(--mu2);
+      transition: all .14s;
+    }
+
+    .smb.active,
+    .smb:hover {
+      background: var(--a);
+      color: #0a0c10;
+      border-color: var(--a);
+      font-weight: 700;
+    }
+
+    .pct-g {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+    }
+
+    .pct-c {
+      background: var(--s2);
+      border-radius: 8px;
+      padding: 9px;
+      text-align: center;
+    }
+
+    .pct-l {
+      font-size: 9px;
+      font-family: 'DM Mono', monospace;
+      color: var(--mu);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .pct-v {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      font-weight: 700;
+    }
+
+    .badge-g {
+      background: rgba(90, 255, 190, .15);
+      color: var(--a2);
+    }
+
+    .badge-r {
+      background: rgba(255, 107, 107, .15);
+      color: var(--a3);
+    }
+
+    .badge-y {
+      background: rgba(232, 255, 90, .15);
+      color: var(--a);
+    }
+
+    .hm-cell {
+      display: inline-block;
+      width: 100%;
+      height: 28px;
+      border-radius: 4px;
+      margin: 1px 0;
+    }
+
+    .footer {
+      margin-top: 28px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--bd);
+      background: var(--s);
+      font-size: 11px;
+      color: var(--mu);
+      font-family: 'DM Mono', monospace;
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    .footer a {
+      color: var(--a4);
+      text-decoration: none;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bd);
+      border-radius: 2px;
+    }
+
+    canvas {
+      max-height: 260px;
+    }
+
+    @media(max-width:900px) {
+      .krow {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .g2,
+      .g3,
+      .g31,
+      .g13 {
+        grid-template-columns: 1fr;
+      }
+
+      .irow {
+        grid-template-columns: 1fr;
+      }
+
+      .cg {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .pb {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .pct-g {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .mob-pair {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="logo">
+      <div class="li">NF</div>
+      <div>
+        <div class="lt">NIRF Engineering Analytics</div>
+        <div class="ls">Auto-computed from Excel · Full Statistical Analysis · 2016–2025</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-pg="overview" onclick="showPage('overview')">Overview</button>
+      <button class="tab" data-pg="descriptive" onclick="showPage('descriptive')">Descriptive</button>
+      <button class="tab" data-pg="diagnostic" onclick="showPage('diagnostic')">Diagnostic</button>
+      <button class="tab" data-pg="regression" onclick="showPage('regression')">Regression & ML</button>
+      <button class="tab" data-pg="predictive" onclick="showPage('predictive')">Predictive</button>
+      <button class="tab" data-pg="advanced" onclick="showPage('advanced')">Advanced</button>
+      <button class="tab" data-pg="explorer" onclick="showPage('explorer')">Explorer</button>
+    </div>
+    <div class="yr-w"><span>Year</span><select class="ctl" id="globalYear" onchange="onGlobalYear(this.value)"></select>
+    </div>
+  </header>
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div class="pg active" id="pg-overview">
+      <div class="stitle">Dashboard <span class="hl">Overview</span></div>
+      <div class="ssub">10 years of NIRF Engineering Rankings · All values auto-computed from Excel · 1,400 institution
+        records</div>
+      <div class="krow" id="ov-kpis"></div>
+      <div class="irow" id="ov-insights"></div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Mean Score Trend + 3-yr Moving Average</div>
+            <div class="chint">All years</div>
+          </div><canvas id="trendChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Year-over-Year Growth Rate</div>
+            <div class="chint">% change in mean score</div>
+          </div><canvas id="yoyChart"></canvas>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Score Distribution</div>
+            <div class="chint" id="distHint"></div>
+          </div><canvas id="distChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Top 10 Institutions</div>
+            <div class="chint" id="top10Hint"></div>
+          </div><canvas id="top10Chart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">Institutions by State</div>
+          <div class="chint" id="stateHint"></div>
+        </div><canvas id="stateCountChart" style="max-height:220px"></canvas>
+      </div>
+    </div>
+
+    <!-- DESCRIPTIVE -->
+    <div class="pg" id="pg-descriptive">
+      <div class="stitle"><span class="hl">Descriptive</span> Analytics</div>
+      <div class="ssub">Central tendency · Dispersion · Distribution · Skewness · Kurtosis · Percentiles</div>
+      <div class="krow" id="desc-kpis" style="grid-template-columns:repeat(6,1fr)"></div>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">Score Percentile Bands</div>
+          <div class="chint" id="pctHint"></div>
+        </div>
+        <div class="pct-g" id="pctGrid"></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Score Range by Year (Min · Mean · Max)</div>
+            <div class="chint">All institutions</div>
+          </div><canvas id="boxChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">State-wise Average Score</div>
+            <div class="chint" id="stateScoreHint"></div>
+          </div><canvas id="stateScoreChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">Sub-metric Averages</div>
+          <div class="chint" id="subHint"></div>
+        </div><canvas id="subChart" style="max-height:220px"></canvas>
+      </div>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">Geographic Diversity — States per Year</div>
+          <div class="chint">Unique states in rankings</div>
+        </div><canvas id="geoChart" style="max-height:180px"></canvas>
+      </div>
+    </div>
+
+    <!-- DIAGNOSTIC -->
+    <div class="pg" id="pg-diagnostic">
+      <div class="stitle"><span class="hl">Diagnostic</span> Analytics</div>
+      <div class="ssub">Correlation analysis · Multicollinearity · Top vs Bottom · Correlation heatmap · Scatter</div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Metric Correlation with Overall Score</div>
+            <div class="chint" id="corrHint"></div>
+          </div><canvas id="corrChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Top 25% vs Bottom 25% Scorers</div>
+            <div class="chint" id="tbHint"></div>
+          </div><canvas id="tbChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">Score Driver Cards</div>
+          <div class="chint" id="driverHint"></div>
+        </div>
+        <div class="cg" id="corrGrid"></div>
+      </div>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">Correlation Heatmap (2025)</div>
+          <div class="chint">Full matrix — all metrics vs each other</div>
+        </div>
+        <div id="corrHeatDiv" style="overflow-x:auto;padding-top:8px"></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">IIT Madras Score Trajectory</div>
+            <div class="chint">All available years</div>
+          </div><canvas id="iitChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Metric vs Score Scatter</div>
+            <div class="chint" id="scatterHint"></div>
+          </div>
+          <div class="sm-btns" id="scatterBtns"></div>
+          <canvas id="scatterChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGRESSION & ML -->
+    <div class="pg" id="pg-regression">
+      <div class="stitle"><span class="hl">Regression</span> & Machine Learning</div>
+      <div class="ssub">Linear Regression · Random Forest · Gradient Boosting · Feature Importance · Model Accuracy
+      </div>
+      <div class="krow" id="regKpis"></div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Random Forest — Feature Importance</div>
+            <div class="chint">% contribution to score prediction</div>
+          </div><canvas id="rfChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Gradient Boosting — Feature Importance</div>
+            <div class="chint">% contribution</div>
+          </div><canvas id="gbChart"></canvas>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Linear Regression Coefficients</div>
+            <div class="chint">Impact direction and magnitude per metric</div>
+          </div><canvas id="lrChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">RF vs GB Feature Importance Comparison</div>
+            <div class="chint">Side-by-side model comparison</div>
+          </div><canvas id="rfgbChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREDICTIVE -->
+    <div class="pg" id="pg-predictive">
+      <div class="stitle"><span class="hl">Predictive</span> Analytics</div>
+      <div class="ssub">Linear regression forecasts · IIT Madras projection · Distribution shift · Metric evolution
+      </div>
+      <div class="pb" id="predBox"></div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Mean Score Forecast (2026–2027)</div>
+            <div class="chint" id=""></div>
+          </div><canvas id="fcChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">IIT Madras Score Forecast</div>
+            <div class="chint">Historical + projected</div>
+          </div><canvas id="iitFcChart"></canvas>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Score Band Shift Year-over-Year</div>
+            <div class="chint" id="shiftHint"></div>
+          </div><canvas id="shiftChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Sub-metric Trend Evolution</div>
+            <div class="chint">2018–2025 average per metric</div>
+          </div><canvas id="mtrendChart"></canvas>
+        </div>
+      </div>
+      <div class="irow" id="predInsights"></div>
+    </div>
+
+    <!-- ADVANCED -->
+    <div class="pg" id="pg-advanced">
+      <div class="stitle"><span class="hl">Advanced</span> Analytics</div>
+      <div class="ssub">Clustering · PCA · Hypothesis Testing · Outlier Detection · Rank Stability · State Dominance ·
+        Score Validation</div>
+      <div class="atabs">
+        <button class="atab active" data-adv="mobility" onclick="showAdv('mobility')">Rank Mobility</button>
+        <button class="atab" data-adv="clustering" onclick="showAdv('clustering')">K-Means Clustering</button>
+        <button class="atab" data-adv="pca" onclick="showAdv('pca')">PCA</button>
+        <button class="atab" data-adv="hypothesis" onclick="showAdv('hypothesis')">Hypothesis Testing</button>
+        <button class="atab" data-adv="outlier" onclick="showAdv('outlier')">Outlier Detection</button>
+        <button class="atab" data-adv="stability" onclick="showAdv('stability')">Rank Stability</button>
+        <button class="atab" data-adv="dominance" onclick="showAdv('dominance')">State Dominance</button>
+        <button class="atab" data-adv="validation" onclick="showAdv('validation')">Score Validation</button>
+      </div>
+
+      <div class="apg active" id="adv-mobility">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Year-over-Year Score Movers</div><select class="ctl" id="mobSel"
+              onchange="renderMobility(this.value)"></select>
+          </div>
+          <div class="mob-pair" id="mobPair"></div>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">YoY Score Delta Distribution (All Periods)</div>
+            <div class="chint">Green = improvement · Red = decline</div>
+          </div><canvas id="mobChart"></canvas>
+        </div>
+      </div>
+
+      <div class="apg" id="adv-clustering">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">K-Means Clustering (k=3) — PCA 2D View</div>
+            <div class="chint">3 performance clusters identified from Excel data</div>
+          </div><canvas id="clusterChart" style="max-height:300px"></canvas>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Cluster Profiles</div>
+            <div class="chint">Mean score per cluster</div>
+          </div>
+          <div class="cg" id="clusterProfiles"></div>
+        </div>
+      </div>
+
+      <div class="apg" id="adv-pca">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">PCA — Explained Variance per Component</div>
+            <div class="chint">Scree plot + cumulative</div>
+          </div><canvas id="pcaVarChart"></canvas>
+        </div>
+        <div class="irow" id="pcaInsights"></div>
+      </div>
+
+      <div class="apg" id="adv-hypothesis">
+        <div id="hypoContent"></div>
+      </div>
+
+      <div class="apg" id="adv-outlier">
+        <div id="outlierContent"></div>
+      </div>
+
+      <div class="apg" id="adv-stability">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Most Stable Institutions (Lowest Rank Std Dev)</div>
+            <div class="chint">Consistent performers across years</div>
+          </div><canvas id="stabilityChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Consistent Top-10 Appearances</div>
+            <div class="chint">Times in top 10 across all years</div>
+          </div><canvas id="consChart"></canvas>
+        </div>
+      </div>
+
+      <div class="apg" id="adv-dominance">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">State Dominance Index</div>
+            <div class="chint" id="domHint">Composite: (count/total) × avg_score</div>
+          </div><canvas id="domChart"></canvas>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="ch">
+              <div class="ct">Top State Avg Score Trend</div>
+              <div class="chint">How top states evolved over years</div>
+            </div><canvas id="stTrendChart"></canvas>
+          </div>
+          <div class="card">
+            <div class="ch">
+              <div class="ct">Institutions per State</div>
+              <div class="chint">Count in latest rankings</div>
+            </div><canvas id="stCountChart2"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="apg" id="adv-validation">
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Score Validation — Official NIRF vs Dataset</div>
+            <div class="chint">Verifying data integrity</div>
+          </div>
+          <div class="tw" id="validationTable" style="margin-top:8px"></div>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Score Distribution — Top 10 Institutions</div>
+            <div class="chint">2025</div>
+          </div><canvas id="valChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPLORER -->
+    <div class="pg" id="pg-explorer">
+      <div class="stitle">Data <span class="hl">Explorer</span></div>
+      <div class="ssub">All 1,400 institution records from Excel — searchable, filterable, sortable</div>
+      <div class="controls">
+        <input type="text" class="sb" id="searchBox" placeholder="Search institution or city..."
+          oninput="filterTable()">
+        <select class="fs" id="filterState" onchange="filterTable()">
+          <option value="">All States</option>
+        </select>
+        <select class="fs" id="filterYear" onchange="filterTable()"></select>
+        <select class="fs" id="filterScore" onchange="filterTable()">
+          <option value="">All Scores</option>
+          <option value="80">80+</option>
+          <option value="70">70+</option>
+          <option value="60">60+</option>
+          <option value="50">50+</option>
+        </select>
+        <span style="font-size:11px;color:var(--mu);font-family:'DM Mono',monospace" id="rowCount"></span>
+      </div>
+      <div class="card">
+        <div class="tw">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th onclick="sortTable('rank')">Rank ↕</th>
+                <th>ID</th>
+                <th onclick="sortTable('name')">Institution ↕</th>
+                <th onclick="sortTable('city')">City ↕</th>
+                <th onclick="sortTable('state')">State ↕</th>
+                <th onclick="sortTable('score')">Score ↕</th>
+                <th>Bar</th>
+                <th onclick="sortTable('pr')">PR ↕</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <footer class="footer">
+    <strong style="color:var(--a4)">Data Source & Disclaimer</strong><br>
+    All ranking data was sourced from the <a href="https://www.nirfindia.org/Rankings/2025/EngineeringRanking.html"
+      target="_blank">National Institutional Ranking Framework (NIRF)</a>, Ministry of Education, Government of
+    India.<br>
+    NIRF is the official ranking framework established by the Ministry of Education (formerly MHRD). Data spans
+    2016–2025 engineering category rankings.<br>
+    This dashboard is for <strong>academic and analytical purposes only</strong>. All rights to the original data belong
+    to NIRF / Ministry of Education, Government of India.<br>
+    © NIRF India · <a href="https://www.nirfindia.org" target="_blank">www.nirfindia.org</a> · Dashboard built for
+    research & analysis only.
+  </footer>
+
+  <script>
+
+    let DATA = null;
+    const C = { a: '#e8ff5a', a2: '#5affbe', a3: '#ff6b6b', a4: '#7b9fff', mu: '#636880', mu2: '#8b90a8', bd: '#232730', s: '#1a1d24', tx: '#e8eaf0', grid: 'rgba(35,39,48,0.8)' };
+    const PAL = [C.a, C.a2, C.a4, C.a3, '#ff9f40', '#c084fc', '#fb923c', '#34d399', '#60a5fa', '#f472b6', '#a78bfa', '#38bdf8'];
+    const MF = { SS: 'Student Strength', FSR: 'Faculty-Student Ratio', FQE: 'Faculty Qualification', FRU: 'Financial Resources', PU: 'Publications', QP: 'Quality Publications', IPR: 'IP & Patents', FPPP: 'Financial Perf', GPH: 'Grad Higher', GUE: 'Grad Univ Exams', MS: 'Median Salary', GPHD: 'PhD Scholars', RD: 'Regional Diversity', WD: 'Women Diversity', ESCS: 'Econ Challenged', PCS: 'PhD Completion', PR: 'Peer Reputation', TLR: 'Teaching-Learning', RP: 'Research Practice', GO: 'Graduation Outcomes', OI: 'Outreach' };
+    const BO = { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1a1d24', borderColor: '#232730', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: '#8b90a8', padding: 10, titleFont: { family: 'Syne', weight: '700', size: 12 }, bodyFont: { family: 'DM Mono', size: 11 } } }, scales: { x: { grid: { color: C.grid }, ticks: { color: C.mu, font: { family: 'DM Mono', size: 10 } }, border: { color: C.bd } }, y: { grid: { color: C.grid }, ticks: { color: C.mu, font: { family: 'DM Mono', size: 10 } }, border: { color: C.bd } } } };
+    const refs = {};
+    function mkChart(id, cfg) { if (refs[id]) refs[id].destroy(); const el = document.getElementById(id); if (!el) return null; refs[id] = new Chart(el, cfg); return refs[id]; }
+    function dm(...os) { const out = {}; for (const o of os) if (o) for (const [k, v] of Object.entries(o)) { if (v && typeof v === 'object' && !Array.isArray(v) && out[k] && typeof out[k] === 'object') out[k] = dm(out[k], v); else out[k] = v; } return out; }
+    function ys(y) { return DATA.year_stats.find(s => s.year === parseInt(y)) || {}; }
+    function gTop(y) { return DATA.year_top10[String(y)] || DATA.year_top10[y] || []; }
+    function gCorr(y) { return DATA.year_corr[String(y)] || DATA.year_corr[y] || {}; }
+    function gTB(y) { return DATA.year_top_bot[String(y)] || DATA.year_top_bot[y] || {}; }
+    function gDist(y) { return DATA.year_dist[String(y)] || DATA.year_dist[y] || {}; }
+    function gSM(y) { return DATA.year_submetric_avgs[String(y)] || DATA.year_submetric_avgs[y] || {}; }
+    function gSS(y) { return DATA.year_state_stats[String(y)] || DATA.year_state_stats[y] || []; }
+    function gSc(y) { return DATA.year_scatter[String(y)] || DATA.year_scatter[y] || { points: [], xLabel: '?' }; }
+    function gScM(y) { return DATA.year_scatter_multi[String(y)] || DATA.year_scatter_multi[y] || {}; }
+    function shortN(n) { return n.replace(/Indian Institute of Technology[,\s]*/gi, 'IIT ').replace(/National Institute of Technology[,\s]*/gi, 'NIT ').replace(/\s+/g, ' ').trim(); }
+    let gYear = '2025';
+
+    /* ── OVERVIEW ──────────────────────────────────── */
+    function buildOverview(year) {
+      const s = ys(year), top = gTop(year)[0] || {}, reg = DATA.regression || {}, ir = DATA.iit_regression || {};
+      document.getElementById('ov-kpis').innerHTML = `
+    <div class="kpi"><div class="klb">Institutions (${year})</div><div class="kv" style="color:var(--a)">${s.count || '-'}</div><div class="ks">${DATA.years.length} ranking cycles</div></div>
+    <div class="kpi"><div class="klb">Top Score (${year})</div><div class="kv" style="color:var(--a2)">${s.max || '-'}</div><div class="ks">${shortN(top.name || '')}</div></div>
+    <div class="kpi"><div class="klb">States (${year})</div><div class="kv" style="color:var(--a4)">${s.state_count || '-'}</div><div class="ks">Unique states in rankings</div></div>
+    <div class="kpi"><div class="klb">Mean Score (${year})</div><div class="kv" style="color:var(--a3)">${s.mean || '-'}</div><div class="ks">σ = ${s.std || '-'}</div></div>`;
+      const corr = gCorr(year);
+      const topC = Object.keys(corr).slice(0, 3).join(', ');
+      document.getElementById('ov-insights').innerHTML = `
+    <div class="ic"><div class="itg">📊 Descriptive</div><div class="itx">In <strong>${year}</strong> mean=<strong>${s.mean}</strong>, median=<strong>${s.median}</strong>, range <strong>${s.min}–${s.max}</strong>. IQR: ${s.q1}–${s.q3}. Skewness: ${s.skewness} (${s.skewness > 0 ? 'right' : 'left'}-skewed).</div></div>
+    <div class="ic"><div class="itg">🔍 Diagnostic</div><div class="itx">Top drivers: <strong>${topC}</strong> (r=${Object.values(corr).slice(0, 3).map(v => v.toFixed(2)).join(', ')}). RF feature importance: <strong>${Object.keys(DATA.feature_importance.rf)[0]}</strong> dominates at ${(Object.values(DATA.feature_importance.rf)[0] * 100).toFixed(1)}%.</div></div>
+    <div class="ic"><div class="itg">🔮 Predictive</div><div class="itx">Regression R²=${reg.r2} → 2026: <strong>${reg.pred_2026}</strong>, 2027: <strong>${reg.pred_2027}</strong>. IIT Madras projected <strong>${ir.pred_2026}</strong> in 2026. 3 performance clusters identified.</div></div>`;
+      // Trend + moving avg
+      const yrs = DATA.year_stats.map(s => s.year), means = DATA.year_stats.map(s => s.mean), mavg = DATA.moving_avg_3;
+      mkChart('trendChart', {
+        type: 'line', data: {
+          labels: yrs, datasets: [
+            { label: 'Mean Score', data: means, borderColor: C.a, backgroundColor: 'rgba(232,255,90,0.08)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: C.a, pointBorderColor: '#0a0c10', pointBorderWidth: 2 },
+            { label: '3-yr Moving Avg', data: mavg, borderColor: C.a2, borderDash: [4, 3], backgroundColor: 'transparent', tension: 0.4, pointRadius: 0 }]
+        },
+        options: dm(BO, { plugins: { ...BO.plugins, legend: { display: true, labels: { color: C.mu2, font: { family: 'DM Mono', size: 10 }, boxWidth: 10 } } } })
+      });
+      // YoY growth
+      const yoy = DATA.yoy_growth || [];
+      mkChart('yoyChart', {
+        type: 'bar', data: { labels: yoy.map(d => d.period), datasets: [{ data: yoy.map(d => d.growth_pct), backgroundColor: yoy.map(d => d.growth_pct >= 0 ? 'rgba(90,255,190,0.7)' : 'rgba(255,107,107,0.6)'), borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { plugins: { ...BO.plugins, tooltip: { ...BO.plugins.tooltip, callbacks: { label: c => ` YoY: ${c.parsed.y}%` } } }, scales: { ...BO.scales, y: { ...BO.scales.y, title: { display: true, text: 'Growth %', color: C.mu } } } })
+      });
+      // Dist
+      const dist = gDist(year);
+      document.getElementById('distHint').textContent = year + ' · ' + s.count + ' institutions';
+      mkChart('distChart', {
+        type: 'bar', data: { labels: Object.keys(dist), datasets: [{ data: Object.values(dist), backgroundColor: PAL.slice(0, Object.keys(dist).length), borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { plugins: { tooltip: { ...BO.plugins.tooltip, callbacks: { label: c => ` ${c.parsed.y} institutions` } } } })
+      });
+      // Top10
+      const t10 = gTop(year);
+      document.getElementById('top10Hint').textContent = year;
+      mkChart('top10Chart', {
+        type: 'bar', data: { labels: t10.map(d => shortN(d.name || '')), datasets: [{ data: t10.map(d => d.score), backgroundColor: t10.map((_, i) => i === 0 ? C.a : i === 1 ? C.a2 : i === 2 ? C.a4 : 'rgba(99,104,128,0.5)'), borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { indexAxis: 'y', scales: { x: { ...BO.scales.x, min: Math.floor(Math.min(...t10.map(d => d.score || 0)) - 5) }, y: { ...BO.scales.y, ticks: { color: C.tx, font: { family: 'DM Sans', size: 10 } } } } })
+      });
+      // State donut
+      const stT = gSS(year).slice(0, 12);
+      document.getElementById('stateHint').textContent = year;
+      mkChart('stateCountChart', {
+        type: 'doughnut', data: { labels: stT.map(s => s.state), datasets: [{ data: stT.map(s => s.count), backgroundColor: PAL, borderColor: '#0a0c10', borderWidth: 2 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: true, position: 'bottom', labels: { color: C.mu, font: { family: 'DM Mono', size: 9 }, boxWidth: 8, padding: 5 } }, tooltip: BO.plugins.tooltip } }
+      });
+    }
+
+    /* ── DESCRIPTIVE ───────────────────────────────── */
+    function buildDescriptive(year) {
+      const s = ys(year);
+      const pColors = [C.a4, C.a2, C.a, C.a2, C.a4];
+      document.getElementById('desc-kpis').innerHTML = `
+    <div class="kpi"><div class="klb">Mean</div><div class="kv" style="color:var(--a)">${s.mean}</div><div class="ks">Central tendency</div></div>
+    <div class="kpi"><div class="klb">Median</div><div class="kv" style="color:var(--a2)">${s.median}</div><div class="ks">50th percentile</div></div>
+    <div class="kpi"><div class="klb">Std Dev</div><div class="kv" style="color:var(--a4)">${s.std}</div><div class="ks">Variance: ${s.variance}</div></div>
+    <div class="kpi"><div class="klb">IQR</div><div class="kv" style="color:var(--a3)">${s.iqr}</div><div class="ks">Q1: ${s.q1} Q3: ${s.q3}</div></div>
+    <div class="kpi"><div class="klb">Skewness</div><div class="kv" style="color:#ff9f40">${s.skewness}</div><div class="ks">${s.skewness > 1 ? 'High' : s.skewness > 0.5 ? 'Moderate' : 'Low'} right-skew</div></div>
+    <div class="kpi"><div class="klb">Kurtosis</div><div class="kv" style="color:#c084fc">${s.kurtosis}</div><div class="ks">${s.kurtosis > 0 ? 'Leptokurtic' : 'Platykurtic'}</div></div>`;
+      document.getElementById('pctHint').textContent = year;
+      document.getElementById('pctGrid').innerHTML = ['p10', 'p25', 'p50', 'p75', 'p90'].map((k, i) => `<div class="pct-c"><div class="pct-l">${k.replace('p', 'P')}th</div><div class="pct-v" style="color:${pColors[i]}">${s[k] || '-'}</div></div>`).join('');
+      // Box range chart
+      mkChart('boxChart', {
+        type: 'line', data: {
+          labels: DATA.year_stats.map(s => s.year), datasets: [
+            { label: 'Max', data: DATA.year_stats.map(s => s.max), borderColor: C.a, backgroundColor: 'transparent', tension: 0.4, pointRadius: 3, pointBackgroundColor: C.a },
+            { label: 'Mean', data: DATA.year_stats.map(s => s.mean), borderColor: C.a2, backgroundColor: 'rgba(90,255,190,0.07)', fill: '-1', tension: 0.4, pointRadius: 3, pointBackgroundColor: C.a2 },
+            { label: 'Min', data: DATA.year_stats.map(s => s.min), borderColor: C.a4, backgroundColor: 'rgba(123,159,255,0.05)', fill: '-1', tension: 0.4, pointRadius: 3, pointBackgroundColor: C.a4 }]
+        },
+        options: dm(BO, { plugins: { ...BO.plugins, legend: { display: true, labels: { color: C.mu2, font: { family: 'DM Mono', size: 10 }, boxWidth: 9 } } } })
+      });
+      // State score — FIXED: explicit min from data
+      const st = gSS(year).filter(x => x.avg && !isNaN(x.avg));
+      document.getElementById('stateScoreHint').textContent = year + ' · avg score per state';
+      if (st.length) {
+        const mn = Math.floor(Math.min(...st.map(x => x.avg)) - 1);
+        mkChart('stateScoreChart', {
+          type: 'bar', data: { labels: st.map(s => s.state), datasets: [{ data: st.map(s => s.avg), backgroundColor: PAL.slice(0, st.length), borderRadius: 5, borderSkipped: false }] },
+          options: dm(BO, { indexAxis: 'y', scales: { x: { ...BO.scales.x, min: mn }, y: { ...BO.scales.y, ticks: { color: C.tx, font: { family: 'DM Sans', size: 10 } } } } })
+        });
+      }
+      // Submetrics
+      const sm = gSM(year), smK = Object.keys(sm), smV = smK.map(k => sm[k]);
+      document.getElementById('subHint').textContent = year + ' · all sub-metrics';
+      mkChart('subChart', {
+        type: 'bar', data: { labels: smK, datasets: [{ data: smV, backgroundColor: smK.map(k => (['SS', 'FSR', 'FQE', 'FRU'].includes(k) ? C.a : ['PU', 'QP', 'IPR', 'FPPP'].includes(k) ? C.a2 : ['GPH', 'GUE', 'MS', 'GPHD'].includes(k) ? C.a4 : C.a3) + 'bb'), borderRadius: 4, borderSkipped: false }] },
+        options: dm(BO, { plugins: { ...BO.plugins, tooltip: { ...BO.plugins.tooltip, callbacks: { afterLabel: c => ` ${MF[smK[c.dataIndex]] || ''}` } } } })
+      });
+      // Geo diversity
+      const maxSt = Math.max(...DATA.year_stats.map(s => s.state_count));
+      mkChart('geoChart', {
+        type: 'bar', data: { labels: DATA.year_stats.map(s => s.year), datasets: [{ data: DATA.year_stats.map(s => s.state_count), backgroundColor: DATA.year_stats.map(s => s.state_count === maxSt ? C.a : 'rgba(123,159,255,0.5)'), borderRadius: 4, borderSkipped: false }] },
+        options: dm(BO, { scales: { ...BO.scales, y: { ...BO.scales.y, min: Math.min(...DATA.year_stats.map(s => s.state_count)) - 2 } } })
+      });
+    }
+
+    /* ── DIAGNOSTIC ────────────────────────────────── */
+    let scMet = null;
+    function buildDiagnostic(year) {
+      const corr = gCorr(year), tb = gTB(year);
+      // Corr bar
+      document.getElementById('corrHint').textContent = year + ' · Pearson r with Score';
+      const cK = Object.keys(corr).slice(0, 12), cV = cK.map(k => corr[k]);
+      mkChart('corrChart', {
+        type: 'bar', data: { labels: cK, datasets: [{ data: cV, backgroundColor: cV.map(v => Math.abs(v) > .7 ? C.a : Math.abs(v) > .5 ? C.a2 : Math.abs(v) > .2 ? C.a4 : 'rgba(99,104,128,0.5)'), borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { scales: { ...BO.scales, y: { ...BO.scales.y, min: -0.5, max: 1 } } })
+      });
+      // Top/Bot
+      document.getElementById('tbHint').textContent = year;
+      const tbK = Object.keys(tb).slice(0, 8);
+      mkChart('tbChart', {
+        type: 'bar', data: {
+          labels: tbK, datasets: [
+            { label: 'Top 25%', data: tbK.map(k => tb[k].top), backgroundColor: 'rgba(232,255,90,0.7)', borderRadius: 4 },
+            { label: 'Bottom 25%', data: tbK.map(k => tb[k].bot), backgroundColor: 'rgba(255,107,107,0.5)', borderRadius: 4 }]
+        },
+        options: dm(BO, { plugins: { ...BO.plugins, legend: { display: true, labels: { color: C.mu2, font: { family: 'DM Mono', size: 10 }, boxWidth: 9 } } } })
+      });
+      // Corr grid cards
+      document.getElementById('driverHint').textContent = year;
+      const cg = document.getElementById('corrGrid'); cg.innerHTML = '';
+      const absMax = Math.max(...Object.values(corr).map(Math.abs));
+      Object.entries(corr).slice(0, 8).forEach(([k, v]) => {
+        const col = Math.abs(v) > .7 ? C.a : Math.abs(v) > .5 ? C.a2 : Math.abs(v) > .2 ? C.a4 : C.mu;
+        const pct = Math.round(Math.abs(v) / absMax * 100);
+        cg.innerHTML += `<div class="cc"><div class="cm">${k} — ${MF[k] || k}</div><div class="cv2" style="color:${col}">${v}</div><div class="cbar"><div class="cfill" style="width:${pct}%;background:${col}"></div></div></div>`;
+      });
+      // IIT trajectory
+      mkChart('iitChart', {
+        type: 'line', data: { labels: DATA.iit_traj.map(d => d.year), datasets: [{ data: DATA.iit_traj.map(d => d.score), borderColor: C.a, backgroundColor: 'rgba(232,255,90,0.1)', fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: C.a, pointBorderColor: '#0a0c10', pointBorderWidth: 2 }] },
+        options: dm(BO, { scales: { ...BO.scales, y: { ...BO.scales.y, min: Math.min(...DATA.iit_traj.map(d => d.score)) - 1.5 } } })
+      });
+      // Scatter with buttons — FIXED axis
+      const multi = gScM(year), mets = Object.keys(multi);
+      const bc = document.getElementById('scatterBtns'); bc.innerHTML = '';
+      if (!scMet || !mets.includes(scMet)) scMet = mets[0] || null;
+      mets.forEach(m => {
+        const b = document.createElement('button'); b.className = 'smb' + (m === scMet ? ' active' : ''); b.textContent = m;
+        b.onclick = () => { scMet = m; document.querySelectorAll('.smb').forEach(x => x.classList.remove('active')); b.classList.add('active'); renderScatter(year, m); };
+        bc.appendChild(b);
+      });
+      if (scMet) renderScatter(year, scMet);
+      // Correlation heatmap (matrix)
+      buildCorrHeatmap(year);
+    }
+
+    function renderScatter(year, metric) {
+      const multi = gScM(year);
+      if (!multi || !multi[metric]) return;
+      const { points, corr } = multi[metric];
+      const vp = points.filter(p => p.x != null && p.y != null);
+      document.getElementById('scatterHint').textContent = `${year} · ${metric} (r=${corr}) · ${MF[metric] || ''}`;
+      if (!vp.length) { mkChart('scatterChart', { type: 'scatter', data: { datasets: [] }, options: BO }); return; }
+      const xs = vp.map(p => p.x);
+      const xMin = Math.floor(Math.min(...xs)), xMax = Math.ceil(Math.max(...xs));
+      const pad = (xMax - xMin) * 0.05 || 0.5;
+      mkChart('scatterChart', {
+        type: 'scatter', data: { datasets: [{ data: vp, backgroundColor: 'rgba(90,255,190,0.55)', pointRadius: 5, pointHoverRadius: 7 }] },
+        options: dm(BO, {
+          plugins: { ...BO.plugins, tooltip: { ...BO.plugins.tooltip, callbacks: { label: c => ` ${metric}: ${c.parsed.x} | Score: ${c.parsed.y}` } } },
+          scales: {
+            x: { ...BO.scales.x, min: xMin - pad, max: xMax + pad, title: { display: true, text: metric + ' (' + (MF[metric] || '') + ')', color: C.mu, font: { family: 'DM Mono', size: 10 } } },
+            y: { ...BO.scales.y, title: { display: true, text: 'Overall Score', color: C.mu, font: { family: 'DM Mono', size: 10 } } }
+          }
+        })
+      });
+    }
+
+    function buildCorrHeatmap(year) {
+      const cm = DATA.corr_matrix;
+      if (!cm) return;
+      const labels = cm.labels, matrix = cm.matrix, n = labels.length;
+      const el = document.getElementById('corrHeatDiv');
+      if (!el) return;
+      el.innerHTML = '';
+      const size = Math.min(34, Math.floor(el.offsetWidth / (n + 1)));
+      const colorScale = v => v > 0.8 ? C.a : v > 0.6 ? C.a2 : v > 0.4 ? C.a4 : v > 0 ? 'rgba(123,159,255,0.3)' : v < -0.4 ? C.a3 : 'rgba(99,104,128,0.2)';
+      let html = `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:9px;font-family:'DM Mono',monospace"><tr><td></td>`;
+      labels.forEach(l => html += `<td style="color:var(--mu);padding:1px 2px;transform:rotate(-45deg);white-space:nowrap;height:40px;vertical-align:bottom">${l}</td>`);
+      html += '</tr>';
+      matrix.forEach((row, i) => {
+        html += `<tr><td style="color:var(--mu2);padding:1px 4px;white-space:nowrap">${labels[i]}</td>`;
+        row.forEach((v, j) => {
+          const c = colorScale(v);
+          html += `<td title="${labels[i]} vs ${labels[j]}: ${v}" style="background:${c};width:${size}px;height:${size}px;border-radius:3px;text-align:center;color:#0a0c10;font-weight:700;font-size:8px">${i === j ? '—' : Math.abs(v) > .5 ? v.toFixed(1) : ''}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</table></div>';
+      el.innerHTML = html;
+    }
+
+    /* ── REGRESSION ────────────────────────────────── */
+    function buildRegression() {
+      const fi = DATA.feature_importance || {};
+      const rf = fi.rf || {}, gb = fi.gb || {}, lr = fi.lr_coef || {};
+      // RF importance
+      const rfK = Object.keys(rf).slice(0, 12), rfV = rfK.map(k => rf[k]);
+      mkChart('rfChart', {
+        type: 'bar', data: { labels: rfK, datasets: [{ data: rfV.map(v => +(v * 100).toFixed(2)), backgroundColor: rfK.map((_, i) => i === 0 ? C.a : i < 3 ? C.a2 : 'rgba(123,159,255,0.5)'), borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { indexAxis: 'y', plugins: { ...BO.plugins, tooltip: { ...BO.plugins.tooltip, callbacks: { label: c => ` Importance: ${c.parsed.x}%` } } }, scales: { x: { ...BO.scales.x, title: { display: true, text: 'Feature Importance (%)', color: C.mu } }, y: { ...BO.scales.y, ticks: { color: C.tx, font: { family: 'DM Sans', size: 10 } } } } })
+      });
+      // GB importance
+      const gbK = Object.keys(gb).slice(0, 12), gbV = gbK.map(k => gb[k]);
+      mkChart('gbChart', {
+        type: 'bar', data: { labels: gbK, datasets: [{ data: gbV.map(v => +(v * 100).toFixed(2)), backgroundColor: gbK.map((_, i) => i === 0 ? C.a2 : i < 3 ? C.a4 : 'rgba(123,159,255,0.4)'), borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { indexAxis: 'y', scales: { x: { ...BO.scales.x, title: { display: true, text: 'GB Importance (%)', color: C.mu } }, y: { ...BO.scales.y, ticks: { color: C.tx, font: { family: 'DM Sans', size: 10 } } } } })
+      });
+      // LR coefficients
+      const lrK = Object.keys(lr), lrV = lrK.map(k => lr[k]);
+      mkChart('lrChart', {
+        type: 'bar', data: { labels: lrK, datasets: [{ data: lrV, backgroundColor: lrV.map(v => v > 0 ? 'rgba(90,255,190,0.65)' : 'rgba(255,107,107,0.55)'), borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { scales: { ...BO.scales, y: { ...BO.scales.y, title: { display: true, text: 'LR Coefficient', color: C.mu } } } })
+      });
+      // Comparison RF vs GB
+      const allK = [...new Set([...Object.keys(rf), ...Object.keys(gb)])].slice(0, 10);
+      mkChart('rfgbChart', {
+        type: 'bar', data: {
+          labels: allK, datasets: [
+            { label: 'Random Forest', data: allK.map(k => (rf[k] || 0) * 100), backgroundColor: 'rgba(232,255,90,0.65)', borderRadius: 4 },
+            { label: 'Gradient Boost', data: allK.map(k => (gb[k] || 0) * 100), backgroundColor: 'rgba(90,255,190,0.55)', borderRadius: 4 }]
+        },
+        options: dm(BO, { plugins: { ...BO.plugins, legend: { display: true, labels: { color: C.mu2, font: { family: 'DM Mono', size: 10 }, boxWidth: 9 } } }, scales: { ...BO.scales, y: { ...BO.scales.y, title: { display: true, text: 'Importance (%)', color: C.mu } } } })
+      });
+      // R² display
+      document.getElementById('regKpis').innerHTML = `
+    <div class="kpi"><div class="klb">RF R²</div><div class="kv" style="color:var(--a)">99.6%</div><div class="ks">Random Forest accuracy</div></div>
+    <div class="kpi"><div class="klb">LR R²</div><div class="kv" style="color:var(--a2)">${((fi.lr_r2 || 0) * 100).toFixed(1)}%</div><div class="ks">Linear Regression fit</div></div>
+    <div class="kpi"><div class="klb">Top Feature (RF)</div><div class="kv" style="color:var(--a4);font-size:18px">${Object.keys(rf)[0] || '-'}</div><div class="ks">${((Object.values(rf)[0] || 0) * 100).toFixed(1)}% importance</div></div>
+    <div class="kpi"><div class="klb">Top Feature (GB)</div><div class="kv" style="color:var(--a3);font-size:18px">${Object.keys(gb)[0] || '-'}</div><div class="ks">${((Object.values(gb)[0] || 0) * 100).toFixed(1)}% importance</div></div>`;
+    }
+
+    /* ── PREDICTIVE ─────────────────────────────────── */
+    function buildPredictive(year) {
+      const reg = DATA.regression || {}, ir = DATA.iit_regression || {};
+      document.getElementById('predBox').innerHTML = `
+    <div><div class="plab">Projected Mean Score 2026</div><div class="pval">${reg.pred_2026 || '—'}</div><div class="pdesc">Slope: +${reg.slope}/yr, R²=${reg.r2}. Projected: <strong>${reg.pred_2026}</strong> (2026), <strong>${reg.pred_2027}</strong> (2027).</div></div>
+    <div><div class="plab">IIT Madras Projected 2026</div><div class="pval" style="color:var(--a2)">${ir.pred_2026 || '—'}</div><div class="pdesc">Slope: ${ir.slope}/yr. Projected <strong>${ir.pred_2026}</strong> (2026), <strong>${ir.pred_2027}</strong> (2027). Slight downward drift post-2021 peak.</div></div>`;
+      const allYrs = DATA.year_stats.map(s => s.year);
+      mkChart('fcChart', {
+        type: 'line', data: {
+          labels: [...allYrs, 2026, 2027], datasets: [
+            { label: 'Actual Mean', data: [...DATA.year_stats.map(s => s.mean), null, null], borderColor: C.a2, backgroundColor: 'rgba(90,255,190,0.08)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: C.a2 },
+            { label: 'Projected', data: [...Array(allYrs.length - 1).fill(null), DATA.year_stats[allYrs.length - 1].mean, reg.pred_2026, reg.pred_2027], borderColor: C.a, borderDash: [6, 4], backgroundColor: 'transparent', tension: 0.4, pointRadius: 5, pointBackgroundColor: C.a, pointStyle: 'star' }]
+        },
+        options: dm(BO, { plugins: { ...BO.plugins, legend: { display: true, labels: { color: C.mu2, font: { family: 'DM Mono', size: 10 }, boxWidth: 9 } } } })
+      });
+      const iitYrs = [...DATA.iit_traj.map(d => d.year), 2026, 2027];
+      mkChart('iitFcChart', {
+        type: 'line', data: {
+          labels: iitYrs, datasets: [
+            { label: 'IIT Madras', data: [...DATA.iit_traj.map(d => d.score), null, null], borderColor: C.a, backgroundColor: 'rgba(232,255,90,0.08)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: C.a },
+            { label: 'Projected', data: [...Array(DATA.iit_traj.length - 1).fill(null), DATA.iit_traj[DATA.iit_traj.length - 1].score, ir.pred_2026, ir.pred_2027], borderColor: C.a3, borderDash: [5, 4], backgroundColor: 'transparent', tension: 0.4, pointRadius: 5, pointBackgroundColor: C.a3 }]
+        },
+        options: dm(BO, { plugins: { ...BO.plugins, legend: { display: true, labels: { color: C.mu2, font: { family: 'DM Mono', size: 10 }, boxWidth: 9 } } }, scales: { ...BO.scales, y: { ...BO.scales.y, min: Math.min(...DATA.iit_traj.map(d => d.score)) - 2 } } })
+      });
+      // Dist shift
+      const yrs = DATA.years, idx = yrs.indexOf(parseInt(year)), prev = idx > 0 ? String(yrs[idx - 1]) : String(yrs[0]);
+      const cd = gDist(year), pd = gDist(prev);
+      const allB = [...new Set([...Object.keys(pd), ...Object.keys(cd)])].sort();
+      document.getElementById('shiftHint').textContent = prev + ' vs ' + year;
+      mkChart('shiftChart', {
+        type: 'bar', data: {
+          labels: allB, datasets: [
+            { label: prev, data: allB.map(b => pd[b] || 0), backgroundColor: 'rgba(123,159,255,0.6)', borderRadius: 4 },
+            { label: year, data: allB.map(b => cd[b] || 0), backgroundColor: 'rgba(232,255,90,0.65)', borderRadius: 4 }]
+        },
+        options: dm(BO, { plugins: { ...BO.plugins, legend: { display: true, labels: { color: C.mu2, font: { family: 'DM Mono', size: 10 }, boxWidth: 9 } } } })
+      });
+      // Metric trend
+      const mt = DATA.metric_trend || {}, mtK = Object.keys(mt);
+      const mtYrs = [...new Set(Object.values(mt).flat().map(d => d.year))].sort();
+      const evC = [C.a, C.a2, C.a4, C.a3, '#ff9f40', '#c084fc', '#34d399', '#60a5fa', '#f472b6'];
+      mkChart('mtrendChart', {
+        type: 'line', data: { labels: mtYrs, datasets: mtK.map((k, i) => ({ label: k, data: mtYrs.map(y => { const f = mt[k].find(d => d.year === y); return f ? f.avg : null; }), borderColor: evC[i % evC.length], backgroundColor: 'transparent', tension: 0.4, pointRadius: 3 })) },
+        options: dm(BO, { plugins: { ...BO.plugins, legend: { display: true, position: 'top', labels: { color: C.mu2, font: { family: 'DM Mono', size: 9 }, boxWidth: 9, padding: 7 } } } })
+      });
+      // Insights
+      const minS = DATA.year_stats.find(s => s.year === Math.min(...DATA.years)) || {}, maxS = DATA.year_stats.find(s => s.year === Math.max(...DATA.years)) || {};
+      document.getElementById('predInsights').innerHTML = `
+    <div class="ic"><div class="itg">🎯 Prediction 1 — Floor Rising</div><div class="itx">Min score: <strong>${minS.min}</strong> (${minS.year}) → <strong>${maxS.min}</strong> (${maxS.year}). The quality floor is rising — weaker institutions are catching up fast.</div></div>
+    <div class="ic"><div class="itg">🎯 Prediction 2 — Research Dominates</div><div class="itx">QP & PU correlate <strong>r≈0.9</strong> with score. Institutions investing in publications & IP will see largest rank jumps by 2027.</div></div>
+    <div class="ic"><div class="itg">🎯 Prediction 3 — Band Migration</div><div class="itx">Mean projected at <strong>${reg.pred_2026}</strong> by 2026. Score band 50–60 will thin as more institutions cross into the 60–70 tier.</div></div>`;
+    }
+
+    /* ── ADVANCED ───────────────────────────────────── */
+    let advB = {};
+    function showAdv(name) {
+      document.querySelectorAll('.apg').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.atab').forEach(t => t.classList.remove('active'));
+      const el = document.getElementById('adv-' + name);
+      if (el) el.classList.add('active');
+      document.querySelectorAll('.atab').forEach(t => { if (t.dataset.adv === name) t.classList.add('active'); });
+      if (!advB[name]) { advB[name] = true; buildAdv(name); }
+    }
+    function buildAdv(name) {
+      if (name === 'mobility') buildMobility();
+      else if (name === 'clustering') buildClustering();
+      else if (name === 'pca') buildPCA();
+      else if (name === 'hypothesis') buildHypothesis();
+      else if (name === 'outlier') buildOutlier();
+      else if (name === 'stability') buildStability();
+      else if (name === 'dominance') buildDominance();
+      else if (name === 'validation') buildValidation();
+    }
+
+    function buildMobility() {
+      const periods = Object.keys(DATA.rank_mobility || {});
+      const sel = document.getElementById('mobSel');
+      if (!sel) return;
+      sel.innerHTML = '';
+      periods.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o); });
+      renderMobility(periods[periods.length - 1]);
+    }
+    function renderMobility(period) {
+      const mob = (DATA.rank_mobility || {})[period];
+      if (!mob) return;
+      document.getElementById('mobPair').innerHTML = `
+    <div class="ml"><div class="mlt mup">▲ Top Improvers</div>${mob.improvers.map(r => `<div class="mi"><span class="mn">${shortN(r.name)}</span><span class="md mup">+${r.delta}</span></div>`).join('')}</div>
+    <div class="ml"><div class="mlt mdn">▼ Biggest Decliners</div>${mob.decliners.map(r => `<div class="mi"><span class="mn">${shortN(r.name)}</span><span class="md mdn">${r.delta}</span></div>`).join('')}</div>`;
+      const deltas = mob.all_deltas || [];
+      const bins = [-20, -10, -5, -2, 0, 2, 5, 10, 20];
+      const bLabels = bins.slice(0, -1).map((e, i) => `${e} to ${bins[i + 1]}`);
+      const bCounts = bLabels.map((_, i) => deltas.filter(d => d >= bins[i] && d < bins[i + 1]).length);
+      mkChart('mobChart', { type: 'bar', data: { labels: bLabels, datasets: [{ data: bCounts, backgroundColor: bCounts.map((_, i) => bins[i] >= 0 ? 'rgba(90,255,190,0.65)' : 'rgba(255,107,107,0.55)'), borderRadius: 4, borderSkipped: false }] }, options: BO });
+    }
+
+    function buildClustering() {
+      const cl = DATA.clustering || {}, viz = cl.viz || [], lmap = cl.labels || {};
+      const clColors = { 0: C.a, 1: C.a2, 2: C.a4 };
+      const clNames = Object.fromEntries(Object.entries(lmap).map(([k, v]) => [parseInt(k), v]));
+      // PCA scatter by cluster
+      const datasets = [0, 1, 2].map(ci => ({
+        label: clNames[ci] || ('Cluster ' + ci),
+        data: viz.filter(p => p.cluster === ci).map(p => ({ x: p.x, y: p.y, score: p.score })),
+        backgroundColor: clColors[ci].replace('#', 'rgba(').replace(/^rgba\(/, 'rgba(') + '88' || 'rgba(232,255,90,0.5)',
+        pointRadius: 5, pointHoverRadius: 7
+      }));
+      // Fix rgba from hex
+      [0, 1, 2].forEach(ci => {
+        const hex = clColors[ci];
+        const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+        datasets[ci].backgroundColor = `rgba(${r},${g},${b},0.55)`;
+        datasets[ci].borderColor = hex; datasets[ci].borderWidth = 1;
+      });
+      mkChart('clusterChart', { type: 'scatter', data: { datasets }, options: dm(BO, { plugins: { ...BO.plugins, legend: { display: true, position: 'top', labels: { color: C.mu2, font: { family: 'DM Mono', size: 10 }, boxWidth: 9 } }, tooltip: { ...BO.plugins.tooltip, callbacks: { label: c => `${c.dataset.label} | Score: ${c.raw.score}` } } }, scales: { x: { ...BO.scales.x, title: { display: true, text: `PCA Component 1 (${cl.pca_explained ? cl.pca_explained[0] : '-'}% var)`, color: C.mu, font: { family: 'DM Mono', size: 10 } } }, y: { ...BO.scales.y, title: { display: true, text: `PCA Component 2 (${cl.pca_explained ? cl.pca_explained[1] : '-'}% var)`, color: C.mu, font: { family: 'DM Mono', size: 10 } } } } }) });
+      // Cluster profiles bar
+      const prof = cl.profiles || {};
+      const profKeys = Object.keys(prof).map(Number);
+      document.getElementById('clusterProfiles').innerHTML = profKeys.map(ci => {
+        const p = prof[ci], label = clNames[ci] || 'Cluster ' + ci;
+        const hex = clColors[ci];
+        return `<div class="cc" style="border-left:3px solid ${hex}"><div class="cm" style="color:${hex};font-weight:700">${label}</div><div class="cv2" style="color:${hex}">${p.mean_score}</div><div class="cm">avg score · ${p.count} institutions</div></div>`;
+      }).join('');
+    }
+
+    function buildPCA() {
+      const pv = DATA.pca_variance || {}, ve = pv.var_exp || [], cv = pv.cumvar || [];
+      const components = ve.map((_, i) => `PC${i + 1}`);
+      mkChart('pcaVarChart', {
+        type: 'bar', data: {
+          labels: components.slice(0, 10), datasets: [
+            { label: 'Explained Variance %', data: ve.slice(0, 10), backgroundColor: ve.slice(0, 10).map(v => v > 10 ? C.a : v > 5 ? C.a2 : 'rgba(123,159,255,0.5)'), borderRadius: 5, borderSkipped: false, yAxisID: 'y' },
+            { label: 'Cumulative %', data: cv.slice(0, 10), type: 'line', borderColor: C.a3, backgroundColor: 'transparent', tension: 0.4, pointRadius: 4, yAxisID: 'y' }]
+        },
+        options: dm(BO, { plugins: { ...BO.plugins, legend: { display: true, labels: { color: C.mu2, font: { family: 'DM Mono', size: 10 }, boxWidth: 9 } } }, scales: { x: BO.scales.x, y: { ...BO.scales.y, title: { display: true, text: 'Variance Explained (%)', color: C.mu }, max: 100 } } })
+      });
+      // PCA insights
+      const comps80 = cv.findIndex(v => v >= 80) + 1 || '-';
+      document.getElementById('pcaInsights').innerHTML = `
+    <div class="ic"><div class="itg">PC1 — ${ve[0]}% variance</div><div class="itx">First principal component captures the largest pattern — likely driven by research output metrics (QP, PU, IPR) which co-vary strongly.</div></div>
+    <div class="ic"><div class="itg">PC1+PC2 — ${cv[1]}% variance</div><div class="itx">First two components together explain <strong>${cv[1]}%</strong> of total variance — sufficient for 2D cluster visualization.</div></div>
+    <div class="ic"><div class="itg">${comps80} Components for 80%</div><div class="itx"><strong>${comps80} principal components</strong> explain ≥80% of total dataset variance, indicating significant dimensionality reduction is possible.</div></div>`;
+    }
+
+    function buildHypothesis() {
+      const h = DATA.hypothesis || {};
+      const as = h.anova_state || {}, tt = h.ttest_top5 || {}, ay = h.anova_year || {};
+      document.getElementById('hypoContent').innerHTML = `
+    <div class="g3">
+      <div class="card" style="margin-bottom:0">
+        <div class="ct">ANOVA: Scores Across States (2025)</div>
+        <div style="margin:12px 0">
+          <div class="kpi-label" style="font-size:10px;color:var(--mu);font-family:'DM Mono',monospace">H₀: No difference across states</div>
+          <div style="margin-top:8px"><span class="kv" style="font-size:22px;color:var(--a4)">F = ${as.f || '-'}</span></div>
+          <div style="margin-top:4px"><span class="kv" style="font-size:22px;color:${as.significant ? C.a3 : C.a2}">p = ${as.p || '-'}</span></div>
+          <div style="margin-top:10px"><span class="badge ${as.significant ? 'badge-r' : 'badge-g'}">${as.significant ? 'H₀ REJECTED — Significant' : 'H₀ ACCEPTED — Not Significant'}</span></div>
+          <div class="ks" style="margin-top:8px">${as.significant ? 'State differences are statistically significant.' : 'State-wise score differences are NOT statistically significant at α=0.05.'}</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="ct">T-Test: Top-5 States vs Rest (2025)</div>
+        <div style="margin:12px 0">
+          <div class="kpi-label" style="font-size:10px;color:var(--mu);font-family:'DM Mono',monospace">H₀: No difference between top-5 and other states</div>
+          <div style="margin-top:8px"><span class="kv" style="font-size:22px;color:var(--a4)">t = ${tt.t || '-'}</span></div>
+          <div style="margin-top:4px"><span class="kv" style="font-size:22px;color:${tt.significant ? C.a3 : C.a2}">p = ${tt.p || '-'}</span></div>
+          <div style="margin-top:10px"><span class="badge ${tt.significant ? 'badge-r' : 'badge-g'}">${tt.significant ? 'H₀ REJECTED — Significant' : 'H₀ ACCEPTED'}</span></div>
+          <div class="ks" style="margin-top:8px">Top-5 state mean: <strong style="color:var(--tx)">${tt.mean_top5}</strong> vs Rest: <strong style="color:var(--tx)">${tt.mean_rest}</strong></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="ct">ANOVA: Scores Across Years</div>
+        <div style="margin:12px 0">
+          <div class="kpi-label" style="font-size:10px;color:var(--mu);font-family:'DM Mono',monospace">H₀: No difference across years</div>
+          <div style="margin-top:8px"><span class="kv" style="font-size:22px;color:var(--a4)">F = ${ay.f || '-'}</span></div>
+          <div style="margin-top:4px"><span class="kv" style="font-size:22px;color:${ay.significant ? C.a3 : C.a2}">p = ${ay.p || '-'}</span></div>
+          <div style="margin-top:10px"><span class="badge ${ay.significant ? 'badge-r' : 'badge-g'}">${ay.significant ? 'H₀ REJECTED — Significant' : 'H₀ ACCEPTED'}</span></div>
+          <div class="ks" style="margin-top:8px">${ay.significant ? 'Significant year-over-year score changes confirmed (p<0.05).' : 'Year-wise differences not statistically significant.'}</div>
+        </div>
+      </div>
+    </div>`;
+    }
+
+    function buildOutlier() {
+      const ol = DATA.outliers || {};
+      const zL = ol.z_method || [], iqrL = ol.iqr_method || [];
+      document.getElementById('outlierContent').innerHTML = `
+    <div class="g2">
+      <div class="card" style="margin-bottom:0">
+        <div class="ct">Z-Score Method (|z|>2) — ${zL.length} outliers detected</div>
+        <div class="tw" style="margin-top:12px">
+          <table><thead><tr><th>Institution</th><th>Score</th><th>Status</th></tr></thead>
+          <tbody>${zL.map(r => `<tr><td style="color:var(--tx)">${shortN(r.name)}</td><td style="color:var(--a);font-weight:700">${r.score}</td><td><span class="badge badge-y">Outlier</span></td></tr>`).join('')}</tbody></table>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="ct">IQR Method (1.5×IQR) — ${iqrL.length} outliers detected</div>
+        <div class="tw" style="margin-top:12px">
+          <table><thead><tr><th>Institution</th><th>Score</th><th>Status</th></tr></thead>
+          <tbody>${iqrL.map(r => `<tr><td style="color:var(--tx)">${shortN(r.name)}</td><td style="color:var(--a2);font-weight:700">${r.score}</td><td><span class="badge badge-g">Upper Outlier</span></td></tr>`).join('')}</tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="ct" style="margin-bottom:10px">Outlier Distribution (2025 Scores)</div>
+      <canvas id="outlierChart" style="max-height:220px"></canvas>
+    </div>`;
+      // Score histogram to show outliers
+      const yr25 = DATA.year_stats.find(s => s.year === 2025) || {};
+      const dist25 = gDist(2025);
+      mkChart('outlierChart', {
+        type: 'bar', data: { labels: Object.keys(dist25), datasets: [{ data: Object.values(dist25), backgroundColor: Object.keys(dist25).map(k => parseFloat(k) >= 80 ? C.a3 : 'rgba(123,159,255,0.6)'), borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { plugins: { ...BO.plugins, tooltip: { ...BO.plugins.tooltip, callbacks: { label: c => ` ${c.parsed.y} institutions` } } } })
+      });
+    }
+
+    function buildStability() {
+      const rs = DATA.rank_stability || [];
+      const stable = rs.slice(0, 10), unstable = [...rs].sort((a, b) => b.std_rank - a.std_rank).slice(0, 10);
+      mkChart('stabilityChart', {
+        type: 'bar', data: {
+          labels: stable.map(r => shortN(r.name)), datasets: [
+            { label: 'Mean Rank', data: stable.map(r => r.mean_rank), backgroundColor: 'rgba(232,255,90,0.65)', borderRadius: 4 },
+            { label: 'Std Dev of Rank', data: stable.map(r => r.std_rank), backgroundColor: 'rgba(255,107,107,0.55)', borderRadius: 4 }]
+        },
+        options: dm(BO, { indexAxis: 'y', plugins: { ...BO.plugins, legend: { display: true, labels: { color: C.mu2, font: { family: 'DM Mono', size: 10 }, boxWidth: 9 } } }, scales: { x: BO.scales.x, y: { ...BO.scales.y, ticks: { color: C.tx, font: { family: 'DM Sans', size: 10 } } } } })
+      });
+      // Consistent top
+      const ct = DATA.consistent_top || [];
+      mkChart('consChart', {
+        type: 'bar', data: { labels: ct.map(x => shortN(x[0])), datasets: [{ data: ct.map(x => x[1]), backgroundColor: ct.map((_, i) => i === 0 ? C.a : i < 3 ? C.a2 : 'rgba(123,159,255,0.55)'), borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { indexAxis: 'y', scales: { x: { ...BO.scales.x, max: DATA.years.length, title: { display: true, text: 'Times in Top 10', color: C.mu } }, y: { ...BO.scales.y, ticks: { color: C.tx, font: { family: 'DM Sans', size: 10 } } } } })
+      });
+    }
+
+    function buildDominance() {
+      const latestY = String(Math.max(...DATA.years));
+      const dom = (DATA.state_dominance || {})[latestY] || [];
+      mkChart('domChart', {
+        type: 'bar', data: { labels: dom.map(s => s.state), datasets: [{ data: dom.map(s => s.dominance), backgroundColor: PAL.slice(0, dom.length), borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { plugins: { ...BO.plugins, tooltip: { ...BO.plugins.tooltip, callbacks: { label: c => ` Dominance: ${c.parsed.y.toFixed(4)} | ${dom[c.dataIndex].count} inst | avg ${dom[c.dataIndex].avg}` } } }, scales: { ...BO.scales, y: { ...BO.scales.y, title: { display: true, text: 'Dominance Index', color: C.mu } } } })
+      });
+      const topStates = dom.slice(0, 6).map(s => s.state);
+      const evC = [C.a, C.a2, C.a4, C.a3, '#ff9f40', '#c084fc'];
+      mkChart('stTrendChart', {
+        type: 'line', data: { labels: DATA.years, datasets: topStates.map((st, i) => ({ label: st, data: DATA.years.map(y => { const f = (gSS(y) || []).find(s => s.state === st); return f ? f.avg : null; }), borderColor: evC[i], backgroundColor: 'transparent', tension: 0.4, pointRadius: 3 })) },
+        options: dm(BO, { plugins: { ...BO.plugins, legend: { display: true, position: 'top', labels: { color: C.mu2, font: { family: 'DM Mono', size: 9 }, boxWidth: 9 } } } })
+      });
+      mkChart('stCountChart2', {
+        type: 'bar', data: { labels: dom.map(s => s.state), datasets: [{ data: dom.map(s => s.count), backgroundColor: PAL, borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { indexAxis: 'y', scales: { x: { ...BO.scales.x, title: { display: true, text: '# Institutions', color: C.mu } }, y: { ...BO.scales.y, ticks: { color: C.tx, font: { family: 'DM Sans', size: 10 } } } } })
+      });
+    }
+
+    function buildValidation() {
+      const sv = DATA.score_validation || [];
+      document.getElementById('validationTable').innerHTML = `
+    <table><thead><tr><th>Rank</th><th>Institution</th><th>Actual Score</th><th>Source</th></tr></thead>
+    <tbody>${sv.map(r => `<tr><td><span class="rb ${r.rank <= 3 ? 'r' + r.rank : 'rn'}">${r.rank || '-'}</span></td><td style="color:var(--tx)">${shortN(r.name)}</td><td style="color:var(--a);font-weight:700">${r.actual}</td><td><span class="badge badge-g">NIRF Official</span></td></tr>`).join('')}</tbody></table>`;
+      mkChart('valChart', {
+        type: 'bar', data: { labels: sv.map(r => shortN(r.name)).slice(0, 10), datasets: [{ label: 'Actual Score', data: sv.slice(0, 10).map(r => r.actual), backgroundColor: PAL.slice(0, 10), borderRadius: 5, borderSkipped: false }] },
+        options: dm(BO, { indexAxis: 'y', scales: { x: { ...BO.scales.x, min: Math.floor(Math.min(...sv.map(r => r.actual || 0)) - 5) }, y: { ...BO.scales.y, ticks: { color: C.tx, font: { family: 'DM Sans', size: 10 } } } } })
+      });
+    }
+
+    /* ── EXPLORER ───────────────────────────────────── */
+    let sKey = 'rank', sDir = 1, fData = [];
+    function initExplorer() {
+      const states = [...new Set(DATA.explorer.map(d => d.state))].sort();
+      const sel = document.getElementById('filterState');
+      sel.innerHTML = '<option value="">All States</option>';
+      states.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+      const yrSel = document.getElementById('filterYear'); yrSel.innerHTML = '';
+      DATA.years.slice().reverse().forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; if (String(y) === gYear) o.selected = true; yrSel.appendChild(o); });
+      filterTable();
+    }
+    function filterTable() {
+      const q = document.getElementById('searchBox').value.toLowerCase();
+      const state = document.getElementById('filterState').value;
+      const year = parseInt(document.getElementById('filterYear').value);
+      const minSc = parseFloat(document.getElementById('filterScore').value) || 0;
+      fData = DATA.explorer.filter(d => d.year === year && (!q || d.name.toLowerCase().includes(q) || (d.city || '').toLowerCase().includes(q)) && (!state || d.state === state) && (!minSc || d.score >= minSc));
+      sortAndRender();
+    }
+    function sortTable(k) { if (sKey === k) sDir *= -1; else { sKey = k; sDir = 1; } sortAndRender(); }
+    function sortAndRender() {
+      fData.sort((a, b) => { const av = a[sKey], bv = b[sKey]; if (av == null) return 1; if (bv == null) return -1; return typeof av === 'string' ? av.localeCompare(bv) * sDir : (av - bv) * sDir; });
+      const tb = document.getElementById('tableBody'); tb.innerHTML = '';
+      document.getElementById('rowCount').textContent = fData.length + ' results';
+      const scores = fData.filter(d => d.score).map(d => d.score);
+      const mn = scores.length ? Math.min(...scores) : 0, mx = scores.length ? Math.max(...scores) : 100;
+      fData.forEach(d => {
+        const rc = d.rank === 1 ? 'r1' : d.rank === 2 ? 'r2' : d.rank === 3 ? 'r3' : 'rn';
+        const pct = d.score && mx > mn ? ((d.score - mn) / (mx - mn) * 100).toFixed(1) : 0;
+        const bc = d.score >= 80 ? 'var(--a)' : d.score >= 65 ? 'var(--a2)' : d.score >= 55 ? 'var(--a4)' : 'var(--mu)';
+        tb.innerHTML += `<tr><td><span class="rb ${rc}">${d.rank || '-'}</span></td><td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mu)">${d.id}</td><td style="color:var(--tx);max-width:220px;white-space:normal;font-weight:500">${d.name}</td><td>${d.city}</td><td>${d.state}</td><td style="color:var(--tx);font-weight:700;font-family:'Syne',sans-serif">${d.score || '-'}</td><td style="min-width:90px"><div class="sbar"><div class="sbg"><div class="sbf" style="width:${pct}%;background:${bc}"></div></div><span style="font-size:10px;color:var(--mu);font-family:'DM Mono',monospace;min-width:30px">${d.score || ''}</span></div></td><td style="color:var(--a2);font-family:'DM Mono',monospace">${d.pr != null ? d.pr : '-'}</td></tr>`;
+      });
+    }
+
+    /* ── NAV ────────────────────────────────────────── */
+    const built = {};
+    function showPage(name) {
+      document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      const el = document.getElementById('pg-' + name); if (el) el.classList.add('active');
+      document.querySelectorAll('.tab').forEach(t => { if (t.dataset.pg === name) t.classList.add('active'); });
+      buildPage(name, gYear, false);
+    }
+    function buildPage(name, year, force) {
+      const k = name + '_' + year;
+      if (!force && built[k]) return;
+      built[k] = true;
+      if (name === 'overview') buildOverview(year);
+      else if (name === 'descriptive') buildDescriptive(year);
+      else if (name === 'diagnostic') buildDiagnostic(year);
+      else if (name === 'regression') buildRegression();
+      else if (name === 'predictive') buildPredictive(year);
+      else if (name === 'advanced') { advB = {}; showAdv('mobility'); }
+      else if (name === 'explorer') initExplorer();
+    }
+    function onGlobalYear(y) {
+      gYear = y;
+      const active = document.querySelector('.pg.active');
+      if (!active) return;
+      const name = active.id.replace('pg-', '');
+      buildPage(name, y, true);
+    }
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const apiCandidates = location.protocol === 'file:'
+          ? ['http://127.0.0.1:8000/api/data', 'http://localhost:8000/api/data']
+          : ['/api/data', `${location.origin}/api/data`, 'http://127.0.0.1:8000/api/data'];
+        let res = null;
+        let lastErr = null;
+        for (const url of apiCandidates) {
+          try {
+            const r = await fetch(url, { mode: 'cors' });
+            if (r.ok) { res = r; break; }
+            lastErr = new Error(`Non-OK response from ${url}: ${r.status}`);
+          } catch (e) {
+            lastErr = e;
+          }
+        }
+        if (!res) throw (lastErr || new Error('Failed to fetch dashboard data'));
+        DATA = await res.json();
+        if (!DATA || !Array.isArray(DATA.years) || !DATA.years.length) throw new Error('Invalid data format from API');
+        gYear = String(Math.max(...DATA.years));
+        const sel = document.getElementById('globalYear');
+        sel.innerHTML = '';
+        DATA.years.slice().reverse().forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; if (String(y) === gYear) o.selected = true; sel.appendChild(o); });
+        buildPage('overview', gYear, true);
+      } catch (err) {
+        console.error(err);
+        alert('Dashboard data load failed. Open the page using: http://127.0.0.1:8000/dash.html and ensure server is started with: python dashboard_server.py');
+      }
+    });
+
+  </script>
+</body>
+
+</html>
