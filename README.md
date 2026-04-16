@@ -60,45 +60,6 @@ python dashboard_server.py
 
 - [http://127.0.0.1:8000/dash.html](http://127.0.0.1:8000/dash.html)
 
-## Deployment on Vercel
-
-### 1) Push project to GitHub
-
-Ensure these files are in repo root:
-- `dash.html`
-- `api/data.py`
-- `sync_dashboard.py`
-- `data.xlsx`
-- `requirements.txt`
-- `vercel.json`
-
-### 2) Import repo in Vercel
-
-- Go to Vercel dashboard
-- Import your GitHub repository
-- Framework preset: `Other`
-
-### 3) Deploy
-
-Vercel will:
-- serve `dash.html` as frontend
-- run Python serverless function for `/api/data`
-
-No additional build command is required for this setup.
-
-## API Contract
-
-- Endpoint: `GET /api/data`
-- Response: precomputed analytics JSON used by all dashboard sections:
-  - `year_stats`, `year_dist`, `year_corr`, `corr_matrix`
-  - `feature_importance` (including `lr_coef`, `lr_r2`)
-  - `metric_trend`
-  - `rank_mobility`
-  - `clustering`, `pca_variance`
-  - `hypothesis`, `outliers`
-  - `rank_stability`, `consistent_top`
-  - `state_dominance`, `score_validation`
-  - `explorer`
 
 ## Troubleshooting
 
